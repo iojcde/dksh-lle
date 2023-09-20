@@ -2,6 +2,7 @@ import { Nav } from "./nav";
 import { ContainerCard } from "./container-card";
 import { getDocker } from "@/lib/docker";
 export default async function Home() {
+  
   const docker = getDocker();
 
   const containers = await docker.listContainers();

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>WebSocket</title>
+
+  <script src="
+https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js
+"></script>
+<link href="
+https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css
+" rel="stylesheet">
+
+</head>
+
+<body>
+  <div id="terminal"></div>
+
+  <script>
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get('id');
+
+      var term = new Terminal();
+        term.open(document.getElementById('terminal'));
+        
+
+ 
+
+    ws = new WebSocket(`ws://localhost:1323/ws?id=${id}`)
+
+    ws.onopen = function() {
+      console.log('Connected')
+    }
+
+    ws.onmessage = function(evt) {
+     term.write(evt.data)
+    }
+
+    term.onData((data)=>{
+      ws.send(data) 
+    }) 
+
+
+    // setInterval(function(){
+    //   ws.send('ping')
+    // }, 1000)
+  </script>
+</body>
+
+</html>
