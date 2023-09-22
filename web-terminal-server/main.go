@@ -40,6 +40,12 @@ type resizeMessage struct {
 }
 
 func terminalProxy(c echo.Context) error {
+	sess, err := getSession(c)
+	if err != nil {
+		return err
+	}
+
+	println(*&sess.Email)
 
 	ctx := context.Background()
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
