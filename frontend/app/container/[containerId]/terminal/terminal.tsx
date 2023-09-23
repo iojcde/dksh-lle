@@ -26,7 +26,8 @@ export default function Terminal({ containerId }: { containerId: string }) {
 
   useEffect(() => {
     const newWs = new ReconnectingWebSocket(
-      "ws://localhost:1323/ws?id=" + containerId
+     // "ws://localhost:1323/ws?id=" + containerId
+     "wss://glorious-guacamole-77gw4v6rg57hrq99-1323.app.github.dev/ws?id=" + containerId
     );
 
     loadTerminal(newWs);
@@ -73,6 +74,7 @@ export default function Terminal({ containerId }: { containerId: string }) {
     ws.onopen = () => {
       if (size.cols > 0 && size.rows > 0)
         ws.send("r" + JSON.stringify({ width: size.cols, height: size.rows }));
+      else 
     };
 
     ws.onmessage = async (evt) => {

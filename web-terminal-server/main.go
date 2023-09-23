@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -17,7 +18,7 @@ var (
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
-			return origin == "http://localhost:3000"
+			return origin == "http://localhost:3000" || origin == "https://glorious-guacamole-77gw4v6rg57hrq99-3000.app.github.dev"
 
 		},
 	}
@@ -40,13 +41,13 @@ type resizeMessage struct {
 }
 
 func terminalProxy(c echo.Context) error {
-	sess, err := getSession(c)
+	/*sess, err := getSession(c)
 	if err != nil {
 		return err
 	}
 
 	println(*&sess.Email)
-
+	*/
 	ctx := context.Background()
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -54,8 +55,9 @@ func terminalProxy(c echo.Context) error {
 	}
 
 	defer ws.Close()
-
-	cli, err := GetDockerClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv,
+		client.WithAPIVersionNegotiation())
+	// cli, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
