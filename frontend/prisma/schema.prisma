@@ -5,8 +5,8 @@
 datasource db {
   provider = "postgresql"
 
-  url = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
   // shadowDatabaseUrl = env("SHADOW_DATABASE_URL") 
 }
 
@@ -16,7 +16,7 @@ generator client {
 }
 
 generator db {
-  provider = "go run github.com/steebchen/prisma-client-go"
+  provider = "cd ../web-terminal-server && go run github.com/steebchen/prisma-client-go"
 }
 
 model Account {

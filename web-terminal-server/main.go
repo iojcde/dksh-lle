@@ -1,3 +1,5 @@
+//go:generate go run github.com/steebchen/prisma-client-go generate
+
 package main
 
 import (
@@ -9,6 +11,8 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/gorilla/websocket"
+	prisma "github.com/iojcde/dksh-lle/web-terminal-server/prisma/db"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -39,15 +43,25 @@ type resizeMessage struct {
 	Width  uint `json:"width"`
 }
 
+var ctx = context.Background()
+var db = prisma.NewClient()
+
 func terminalProxy(c echo.Context) error {
+
 	sess, err := getSession(c)
 	if err != nil {
 		return err
 	}
 
-	println(*&sess.Email)
+	user, err := db.User.FindUnique(prisma.User.Email.Equals(sess.Email)).Exec(ctx)
+	if err != nil {
+		return err
+	}
 
-	ctx := context.Background()
+	if user == nil {
+		return echo.ErrUnauthorized
+	}
+
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		return err
@@ -154,6 +168,19 @@ func terminalProxy(c echo.Context) error {
 }
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	db.Connect()
+	defer func() {
+		if err := db.Prisma.Disconnect(); err != nil {
+			panic(err)
+		}
+	}()
+
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
