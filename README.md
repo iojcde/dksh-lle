@@ -4,8 +4,8 @@ VSCode Live share로 공동으로 작업해, 모든 기여자가 기록되지는
 
 기여자: 
 
-@iojcde
+https://github.com/iojcde
 
-@destiny-kr
+https://github.com/destiny-kr
 
-@sunit1026333
+https://github.com/sunit1026333
