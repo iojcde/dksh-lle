@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"io"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lestrrat-go/jwx/v2/jwa"
@@ -14,7 +15,7 @@ import (
 func getSession(c echo.Context) (*SessionToken, error) {
 
 	rawJwe, _ := c.Request().Cookie("next-auth.session-token")
-	nextAuthSecret := "a5swrX9le+IPS7LI6El8iRsCTfQbAY2Pm0Jzd1t70rM="
+	nextAuthSecret := os.Getenv("NEXTAUTH_SECRET")
 	info := "NextAuth.js Generated Encryption Key"
 
 	// Step 1: Generate the decryption key with an hdkf lib

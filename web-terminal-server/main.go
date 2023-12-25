@@ -1,5 +1,3 @@
-//go:generate go run github.com/steebchen/prisma-client-go generate
-
 package main
 
 import (
@@ -10,8 +8,9 @@ import (
 	"sync"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/gorilla/websocket"
-	prisma "github.com/iojcde/dksh-lle/web-terminal-server/prisma/db"
+	prisma "github.com/iojcde/dksh-lle/web-terminal-server/db"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -80,16 +79,32 @@ func terminalProxy(c echo.Context) error {
 	if id == "" {
 		return echo.NewHTTPError(400, "id is required")
 	}
-	println(id)
+	println(id, "connected")
 
-	containerConn, err := cli.ContainerAttach(ctx, id, types.ContainerAttachOptions{
-		Stderr: true,
-		Stdout: true,
-		Stdin:  true,
-		Stream: true,
-	})
+	cont, err := cli.ContainerInspect(ctx, id)
 	if err != nil {
-		log.Fatalf("attach error: %v", err)
+		return err
+	}
+
+	email, _ := user.Email()
+	if cont.Config.Labels["email"] != email {
+		return echo.ErrUnauthorized
+	}
+
+	if cont.State.Status != "running" {
+		cli.ContainerStart(ctx, id, types.ContainerStartOptions{})
+	}
+
+	containerConn, err := cli.ContainerAttach(ctx,
+		id, types.ContainerAttachOptions{
+			Stdin:  true,
+			Stdout: true,
+			Stderr: true,
+			Stream: true,
+		})
+	if err != nil {
+		log.Panicf("attach error: %v", err)
+
 	}
 	var wg sync.WaitGroup
 
@@ -116,7 +131,18 @@ func terminalProxy(c echo.Context) error {
 			_, rawMsg, err := ws.ReadMessage()
 			if err != nil {
 				log.Printf("read ws error: %v", err)
+
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+					log.Printf("unexpected close error: %v", err)
+				} else {
+					log.Println("going away")
+					cli.ContainerStop(ctx, id, container.StopOptions{
+						Timeout: nil,
+					})
+
+				}
 				break
+
 			}
 
 			if len(rawMsg) != 0 {
